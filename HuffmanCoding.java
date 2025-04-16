@@ -1,4 +1,4 @@
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class HuffmanCoding implements HuffmanInterface {
 
@@ -25,34 +25,50 @@ public class HuffmanCoding implements HuffmanInterface {
         public int compareTo(HuffmanNode o) {
             return this.count - o.count;
         }
+
+        boolean isLeaf(){return left == null && right == null;}
     }
 
+
+    class HuffmanCode{
+        String code;
+        char value;
+        public HuffmanCode(char value, String code){
+            this.code = code;
+            this.value = value;
+        }
+    }
+
+    List<HuffmanCode> codes = new ArrayList<HuffmanCode>();
     PriorityQueue<HuffmanNode> priorityQueue = new PriorityQueue<>();
     HuffmanNode root;
-    String[] codes = new String[256];
+
+
 
 
     @Override
     public String decode(String codedMessage) {
-        StringBuilder result = new StringBuilder();
-        HuffmanNode current = root;
+        if (codedMessage == null || codedMessage.length() == 0 || root==null) {
+            return "";
+        }
 
-        for (int i = 0; i < codedMessage.length(); i++) {
-            char c = codedMessage.charAt(i);
+        StringBuilder decodedMessage = new StringBuilder();
+        HuffmanNode node = root;
 
-            HuffmanNode next = (c == '0') ? current.left : current.right;
-            current = next;
-            if (current == null) {
-                throw new IllegalArgumentException("Illegal code");
+        for(char c : codedMessage.toCharArray()) {
+            if (c == '0'){
+                node = node.left;
             }
-
-            if (current.left == null && current.right == null) {
-                result.append(current.value);
-                current = root;
+            if (c == '1'){
+                node = node.right;
+            }
+            if(node.isLeaf()){
+                decodedMessage.append(node.value);
+                node = root;
             }
         }
 
-        return result.toString();
+        return decodedMessage.toString();
     }
 
     @Override
@@ -77,30 +93,39 @@ public class HuffmanCoding implements HuffmanInterface {
             priorityQueue.add(composite);
         }
 
-        HuffmanNode root = priorityQueue.poll();
+        this.root = priorityQueue.poll();
 
+        String encodedMessage = "";
         generateCodes(root,"");
-
-        StringBuilder sb = new StringBuilder();
         for(char c : message.toCharArray()) {
-            sb.append(codes[c]);
+            encodedMessage += findCodes(c);
         }
 
-        return sb.toString();
+        return encodedMessage;
     }
+
+
+    String findCodes(char c) {
+        for(HuffmanCode code : codes){
+            if(code.value == c){
+                return code.code;
+            }
+        }
+        return "";
+    }
+
 
     void generateCodes(HuffmanNode node, String code) {
-        if(node.left ==null && node.right == null) {
-            codes[node.value] = code;
-            return;
+        if (node == null) { return;}
+        if (node.isLeaf()) {
+            //reached a leaf save the code
+            codes.add(new HuffmanCode(node.value, code));
         }
-        if(node.left != null) {
-            generateCodes(node.left, code + "0");
-        }
-        if(node.right != null) {
-            generateCodes(node.right, code + "1");
-        }
+        generateCodes(node.left, code + "0");
+        generateCodes(node.right, code + "1");
+
     }
+
 
 }
 
